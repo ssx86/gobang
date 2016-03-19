@@ -7,6 +7,7 @@ TRYTIME = 200000
 class Board
   attr_accessor :side
   attr_accessor :empty_pos
+  attr_accessor :points
 
   def log msg
     puts "    [LOG]#{msg}"
@@ -14,10 +15,6 @@ class Board
 
   def copy
     return Board.new(self)
-  end
-
-  def points
-    @points
   end
 
   def initialize(board = nil)
@@ -97,10 +94,6 @@ class Board
       puts "[#{name(@side)} got score: #{score}]"
     end
     change_side
-  end
-
-  def test_move(x, y)
-    return judge(x, y)
   end
 
   def name(side)
