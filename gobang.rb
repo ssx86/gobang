@@ -1,11 +1,12 @@
 load 'Board.rb'
 load 'ai.rb'
 
-class Gobang
 
+class Gobang
   def initialize
     @board = Board.new
     @board.show
+    @ai = AI.new
   end
 
   def judge x, y
@@ -17,7 +18,7 @@ class Gobang
   end
 
   def ai_go
-    pos, _ = AI.guess @board
+    pos, _ = @ai.guess @board
     @board.move(pos[0], pos[1])
     @board.show
     judge(pos[0], pos[1])

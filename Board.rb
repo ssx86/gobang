@@ -45,6 +45,12 @@ class Board
     @side = -@side
   end
 
+  def reset(x, y)
+    @black_map[x] &= (0xFFFF ^ (1 << y))
+    @white_map[x] &= (0xFFFF ^ (1 << y))
+    @empty_pos[x] |= (1 << y)
+  end
+
   def set(x, y, side = @side)
     case side
       when BLACK
@@ -218,7 +224,6 @@ class Board
 
   def score
 
-
     def score_color side
       dirs = [[0, 1], [1, 0], [1, 1], [1, -1]]
       #先判断输赢
@@ -288,13 +293,11 @@ class Board
       end
 
 
-
       #puts "#{name(side)}:\n活一: #{l1}, 活二: #{l2}, 活三: #{l3}, 活四: #{l4}\n眠二: #{s2}, 眠三 #{s3}, 眠四 #{s4}"
       l1*2 + l2 * 10 + l3 * 50 + l4 * 100000 + s1 + s2 * 7 + s3 * 30 + s4 * 5000
     end
 
     ret = score_color(@side) - score_color(-@side)
-    #puts "score: #{ret}"
     return NULL, ret
   end
 end
