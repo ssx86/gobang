@@ -24,15 +24,16 @@ class Gobang
     @board.change_side
   end
 
-  def user_go
-    pos = gets.chomp
+  def user_go pos=nil
+    pos ||= gets.chomp
     y = pos[0].upcase.ord - 'A'.ord
-    x = pos[1..-1].to_i
+    x = pos[1..-1].to_i - 1
     @board.move(x, y)
     @board.show
     judge(x, y)
     @board.change_side
   end
+
 
   def play
     while true do
@@ -40,6 +41,14 @@ class Gobang
       ai_go
     end
   end
+
+  def test
+    user_go 'H8'
+    ai_go
+    user_go 'N14'
+    ai_go
+  end
 end
 
 Gobang.new.play
+

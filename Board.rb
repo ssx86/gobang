@@ -1,4 +1,4 @@
-BLACK, WHITE, NULL, NA = -1, 1, 0, -2
+BLACK, WHITE, NULL, NO_VALUE = -1, 1, 0, -2
 BOARD_SIZE = 15
 FIVE = 5
 MAX_SCORE = 100000000
@@ -16,16 +16,17 @@ class Board
     @id = 1
     @side = BLACK
     @last_pos = nil
-    @state = NULL
-    @empty_pos = []
+    #@empty_pos = []
     # moves saves in a hash table
     if board
       @white_map = board.white_map.clone 
-      @black_map = board.black_map.clone 
+      @black_map = board.black_map.clone
+      @empty_pos = board.empty_pos.clone
     else
-      # 开始使用bit 棋盘
+      #
       @white_map = Array.new(BOARD_SIZE, 0)
       @black_map = Array.new(BOARD_SIZE, 0)
+      @empty_pos = Array.new(BOARD_SIZE, 0xFFFF)
     end
   end
 
@@ -43,66 +44,77 @@ class Board
   end
 
   def set(x, y, side = @side)
-    bit_board = case side  
-                when BLACK
-                  @black_map
-                else
-                  @white_map
-                end
-    bit_board[x] |= (1 << y)
-    puts "bit:#{y},  #{bit_board[x] }"
+    case side
+      when BLACK
+        @black_map[x] |= (1 << y)
+      when WHITE
+        @white_map[x] |= (1 << y)
+      else
+        exit
+    end
+    @empty_pos[x] &= (0xFFFF ^ (1 << y))
+  end
+
+  def empty?(x, y)
+    return NO_VALUE unless valid_move(x, y)
+    bit_x = x
+    bit_y = (1 << y)
+
+    @empty_pos[bit_x] & bit_y > 0
   end
 
   def get(x, y)
-    return NA unless valid_move(x, y)
+    return NO_VALUE unless valid_move(x, y)
     bit_x = x
     bit_y = (1 << y)
-    if @black_map[bit_x] & bit_y > 0
+
+    if (@black_map[bit_x] & bit_y) > 0
       BLACK
-    elsif @white_map[bit_x] & bit_y > 0
-      WHITE
+    elsif (@white_map[bit_x] & bit_y) > 0 then
+      return WHITE
     else
       NULL
     end
   end
 
   def show
-    puts "   A B C D E F G H I J K L M N O "
     iter_xy do |x, y|
-      print("%2d " % x) if y == 0
+      print('%2d ' % (x+1) ) if y == 0
       c = get(x, y)
       case c
         when WHITE
-          print "o "
+          print 'o '
         when BLACK
-          print "x "
+          print 'x '
         else
-          print ". "
+          print '. '
       end
       print "\n" if y == BOARD_SIZE-1
     end
+    puts '   A B C D E F G H I J K L M N O '
     if @last_pos
-      x = (@last_pos[0] + 'A'.ord).chr
-      y = @last_pos[1]
+      x = (@last_pos[1] + 'A'.ord).chr
+      y = @last_pos[0] + 1
       puts "[#{@id}手:#{name(@side)}, 落子: #{x}#{y}]"
     end
 
   end
 
   def move(x, y)
-    @id = @id + 1
+    puts "moving: #{x}, #{y}"
     @last_pos = [x, y]
     set(x, y)
+    @id = @id + 1
   end
 
   def name(side)
     case side
     when BLACK
-      return "BLACK"
+      return 'BLACK'
     when WHITE
-      return "WHITE"
+      return 'WHITE'
     else
-      return "N/A"
+      return 'N/A'
     end
   end
 

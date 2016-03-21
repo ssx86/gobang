@@ -9,6 +9,9 @@ class AI
     best_score = 0
 
     board.iter_xy do |x, y|
+      unless board.empty? x, y
+        break
+      end
       result, score = AI.test(board, x, y)
       if result == board.side
         best_pos = [x, y]
