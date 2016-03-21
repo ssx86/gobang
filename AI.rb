@@ -7,27 +7,24 @@ class AI
   def self.guess board
     best_pos = nil
     best_score = 0
-
-    board.iter_xy do |x, y|
-      unless board.empty? x, y
-        break
-      end
-      result, score = AI.test(board, x, y)
-      if result == board.side
-        best_pos = [x, y]
-        break
-      elsif score >= best_score then
-        best_pos = [x, y]
-        best_score = score
-      end
-    end
-
-    return best_pos, best_score
+    result, score = AI.calc board, 5
   end
 
 
-  def self.test board, x, y
-    board.judge(x, y)
+  def self.calc board, depth
+    if depth == 0 then
+      return board.score
+    end
+
+    board.iter_empty do |x, y|
+      new_board = Board.new board
+      new_board.move x, y
+      score = new_board.score
+      
+      new_board.change_side
+    end
+
+
   end
 
 end

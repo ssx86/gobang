@@ -42,11 +42,25 @@ class Gobang
     end
   end
 
-  def test
-    user_go 'H8'
-    ai_go
-    user_go 'N14'
-    ai_go
+  def test1
+    @board.move(8, 8)
+    @board.move(8, 7)
+    @board.move(8, 9)
+    @board.move(7, 8)
+
+    @board.show
+    puts @board.score
+  end
+
+  def test2
+    @board.move(0, 0)
+    @board.move(0, 1)
+    @board.move(0, 2)
+    @board.move(1, 1)
+
+    @board.show
+    puts @board.score
+
   end
 end
 
