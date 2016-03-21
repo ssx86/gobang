@@ -1,42 +1,37 @@
-Black, White, NULL, NA = -1, 1, 0, -2
-BoardSize = 15
+BLACK, WHITE, NULL, NA = -1, 1, 0, -2
+BOARD_SIZE = 15
 FIVE = 5
-TRYTIME = 200000
 MAX_SCORE = 100000000
-
 
 class Board
   attr_accessor :side
   attr_accessor :empty_pos
 
-  def log msg
-    puts "    [LOG]#{msg}"
-  end
 
   def copy
-    return Board.new(self)
+    Board.new(self)
   end
 
   def initialize(board = nil)
     @id = 1
-    @side = Black
+    @side = BLACK
     @last_pos = nil
     @state = NULL
     @empty_pos = []
-    # moves saves in a hashtable
-    if board then
+    # moves saves in a hash table
+    if board
       @white_map = board.white_map.clone 
       @black_map = board.black_map.clone 
     else
       # 开始使用bit 棋盘
-      @white_map = Array.new(BoardSize, 0)
-      @black_map = Array.new(BoardSize, 0)
+      @white_map = Array.new(BOARD_SIZE, 0)
+      @black_map = Array.new(BOARD_SIZE, 0)
     end
   end
 
 
   def valid_move(x, y)
-    x>=0 and x<BoardSize and y>=0 and y<BoardSize
+    x>=0 and x<BOARD_SIZE and y>=0 and y<BOARD_SIZE
   end
 
   def opposite(side)
@@ -49,9 +44,9 @@ class Board
 
   def set(x, y, side = @side)
     bit_board = case side  
-                when Black 
+                when BLACK
                   @black_map
-                when White 
+                else
                   @white_map
                 end
     bit_board[x] |= (1 << y)
@@ -59,59 +54,47 @@ class Board
   end
 
   def get(x, y)
-    return NA if not valid_move(x, y) 
+    return NA unless valid_move(x, y)
     bit_x = x
     bit_y = (1 << y)
     if @black_map[bit_x] & bit_y > 0
-      return Black
+      BLACK
     elsif @white_map[bit_x] & bit_y > 0
-      return White
+      WHITE
     else
-      return NULL
+      NULL
     end
   end
 
   def show
-    (0...BoardSize).each do |x|
-      (0...BoardSize).each do |y|
-        c = get(x, y)
-        case c
-        when White
+    iter_xy do |x, y|
+      c = get(x, y)
+      case c
+        when WHITE
           print "o "
-        when Black
+        when BLACK
           print "x "
-        when NULL
+        else
           print ". "
-        end
       end
-      print "\n"
+      print "\n" if y == BOARD_SIZE-1
     end
+    puts "[#{@id}手:#{name(@side)}, 落子: #{@last_pos}]"
   end
 
   def move(x, y)
     @id = @id + 1
+    @last_pos = [x, y]
     set(x, y)
-    result, score, reason = judge(x, y)
-
-    show
-
-    puts "[#{@id}手:#{name(@side)} 落子： #{[x, y]}]"
-    if result != NULL then
-      puts "[#{name(@side)} win!, #{reason}]"
-      exit
-    else
-      puts "[#{name(@side)} got score: #{score}]"
-    end
-    change_side
   end
 
   def name(side)
     case side
-    when Black
-      return "Black"
-    when White
-      return "White"
-    when NULL
+    when BLACK
+      return "BLACK"
+    when WHITE
+      return "WHITE"
+    else
       return "N/A"
     end
   end
@@ -133,25 +116,25 @@ class Board
     return NULL, total + 1, nil
   end
 
-  def judge_helper(x, y, movex, movey)
-    deltax = movex
-    deltay = movey
+  def judge_helper(x, y, delta_x, delta_y)
+    dx = delta_x
+    dy = delta_y
 
     min_x, min_y = x, y
     max_x, max_y = x, y
-    while get(min_x-deltax, min_y-deltay) == @side do 
-      min_x, min_y = min_x - deltax, min_y - deltay 
+    while get(min_x-dx, min_y-dy) == @side do
+      min_x, min_y = min_x - dx, min_y - dy
     end
-    while get(max_x+deltax, max_y+deltay) == @side do 
-      max_x, max_y = max_x + deltax, max_y + deltay 
+    while get(max_x+dx, max_y+dy) == @side do
+      max_x, max_y = max_x + dx, max_y + dy
     end
 
     #judge connect count
     count = max_x - min_x
     count = max_y - min_y if count == 0
 
-    if count + 1 >= FIVE then
-      return @side
+    if count + 1 >= FIVE
+      @side
     else
       return NULL, count
     end
@@ -159,13 +142,20 @@ class Board
 
   def all_space
     ret = []
-    (0...BoardSize).each do |x|
-      (0...BoardSize).each do |y|
-        if get(x, y) == NULL then
-          ret << [x, y] 
-        end
+    iter_xy do |x, y|
+      if get(x, y) == NULL
+        ret << [x, y]
       end
     end
-    return ret
+
+    ret
+  end
+
+  def iter_xy
+    (0...BOARD_SIZE).each do |x|
+      (0...BOARD_SIZE).each do |y|
+        yield x, y
+      end
+    end
   end
 end
