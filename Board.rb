@@ -67,7 +67,9 @@ class Board
   end
 
   def show
+    puts "   A B C D E F G H I J K L M N O "
     iter_xy do |x, y|
+      print("%2d " % x) if y == 0
       c = get(x, y)
       case c
         when WHITE
@@ -79,7 +81,12 @@ class Board
       end
       print "\n" if y == BOARD_SIZE-1
     end
-    puts "[#{@id}手:#{name(@side)}, 落子: #{@last_pos}]"
+    if @last_pos
+      x = (@last_pos[0] + 'A'.ord).chr
+      y = @last_pos[1]
+      puts "[#{@id}手:#{name(@side)}, 落子: #{x}#{y}]"
+    end
+
   end
 
   def move(x, y)
