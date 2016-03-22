@@ -5,73 +5,68 @@ class AI
   end
 
   def guess board
-    result, score = max_min board, 3, 0
+    pos, score = max_min board, 3, 1
   end
 
-
   def max_min board, depth, current
-    if current % 2 == 0 then # max
-      return _max(board, depth, current)
+    side = board.side
+    pos, score = nil, 0
+    if side == BLACK
+      pos, score = _max(board, depth, current)
     else
-      return _min(board, depth, current)
+      pos, score = _min(board, depth, current)
     end
+    return pos, score
+
   end
 
   def _min(board, depth, current)
-    if current <= 2 then
-      print "."
-    end
-    if current == depth
-      return board.score
-    end
 
-    side = case current % 2
-           when 0
-             board.side
-           when 1
-             - board.side
-           end
+    side = board.side * ((current % 2 == 1) and 1 or -1)
 
     best = 10000000
-    result = NULL
+    pos = nil
     board.iter_empty do |x, y|
-      next unless x < 10 and x > 5
-      next unless y < 10 and y > 5
+      next if board.get_value(x, y) < 3
       board.set x, y, side
-      result, score = _max(board, depth, current + 1)
+
+      if current == depth
+        score = board.score
+      else
+        _, score = _max(board, depth, current + 1)
+      end
       board.reset x, y
 
-      best = score if score < best 
+      if score < best
+        best = score
+        pos = [x, y]
+      end
     end
-    return result, best
+    return pos, best
   end
 
   def _max(board, depth, current)
-    if current <= 2 then
-      print "."
-    end
-    if current == depth
-      return board.score
-    end
 
-    side = case current % 2
-           when 0
-             board.side
-           when 1
-             - board.side
-           end
+    side = board.side * ((current % 2 == 1) and 1 or -1)
+
     best = -10000000
-    result = NULL
+    pos = nil
     board.iter_empty do |x, y|
-      next unless x < 10 and x > 5
-      next unless y < 10 and y > 5
+      next if board.get_value(x, y) < 2
       board.set x, y, side
-      result, score = _min(board, depth, current+1)
+      if current == depth
+        score = board.score
+      else
+        _, score = _min(board, depth, current + 1)
+      end
       board.reset x, y
 
-      best = score if score > best 
+      if score > best
+        best = score
+        pos = [x, y]
+      end
     end
-    return result, best
+    return pos, best
   end
 
 

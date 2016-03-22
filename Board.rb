@@ -24,16 +24,18 @@ class Board
       @white_map = board.white_map.clone
       @black_map = board.black_map.clone
       @empty_pos = board.empty_pos.clone
+      @value_map = board.value_map.clone
     else
       #
       @white_map = Array.new(BOARD_SIZE, 0)
       @black_map = Array.new(BOARD_SIZE, 0)
       @empty_pos = Array.new(BOARD_SIZE, 0xFFFF)
+      @value_map = Array.new(BOARD_SIZE * BOARD_SIZE, 0)
     end
   end
 
 
-  def valid_move(x, y)
+  def valid_pos(x, y)
     x>=0 and x<BOARD_SIZE and y>=0 and y<BOARD_SIZE
   end
 
@@ -45,13 +47,38 @@ class Board
     @side = -@side
   end
 
+  def change_value(x, y, delta)
+    values = [
+        [2, 1, 1, 2, 1, 1, 2],
+        [1, 4, 1, 4, 1, 1, 1],
+        [1, 1, 5, 5, 5, 1, 1],
+        [2, 4, 5, 0, 5, 4, 2],
+        [1, 1, 5, 5, 5, 1, 1],
+        [1, 4, 1, 4, 1, 4, 1],
+        [2, 1, 1, 2, 1, 1, 2],
+    ]
+    (-3..3).each do |dx|
+      next if x-dx < 0 or x+dx > BOARD_SIZE - 1
+      (-3..3).each do |dy|
+        next if y-dy < 0 or y+dy > BOARD_SIZE - 1
+        @value_map[(y+dy) * BOARD_SIZE + (x+dx)] += delta * (values[dx+3][dy+3])
+      end
+    end
+  end
+
+  def get_value(x, y)
+    @value_map[y * BOARD_SIZE + x]
+  end
+
   def reset(x, y)
     @black_map[x] &= (0xFFFF ^ (1 << y))
     @white_map[x] &= (0xFFFF ^ (1 << y))
     @empty_pos[x] |= (1 << y)
+    change_value(x, y, -1)
   end
 
   def set(x, y, side = @side)
+    return unless valid_pos(x, y)
     case side
       when BLACK
         @black_map[x] |= (1 << y)
@@ -61,10 +88,11 @@ class Board
         exit
     end
     @empty_pos[x] &= (0xFFFF ^ (1 << y))
+    change_value(x, y, 1)
   end
 
   def empty?(x, y)
-    return NO_VALUE unless valid_move(x, y)
+    return NO_VALUE unless valid_pos(x, y)
     bit_x = x
     bit_y = (1 << y)
 
@@ -72,7 +100,7 @@ class Board
   end
 
   def get(x, y)
-    return NO_VALUE unless valid_move(x, y)
+    return NO_VALUE unless valid_pos(x, y)
     bit_x = x
     bit_y = (1 << y)
 
@@ -85,27 +113,30 @@ class Board
     end
   end
 
-  def show
+  def show show_score=false
     iter do |x, y|
       print('%2d ' % (x+1)) if y == 0
       c = get(x, y)
       case c
         when WHITE
-          print 'o '
+          print ' o'
         when BLACK
-          print 'x '
+          print ' x'
         else
-          print '. '
+         # print "%2d" % get_value(x, y)
+          print ' .'
       end
       print "\n" if y == BOARD_SIZE-1
     end
-    puts '   A B C D E F G H I J K L M N O '
+    puts '    A B C D E F G H I J K L M N O '
     if @last_pos
       x = (@last_pos[1] + 'A'.ord).chr
       y = @last_pos[0] + 1
       puts "[#{@id}手:#{name(@side)}, 落子: #{x}#{y}]"
     end
-
+    if show_score
+      score true
+    end
   end
 
   def move(x, y)
@@ -222,20 +253,20 @@ class Board
     true
   end
 
-  def score
+  def score(show_score = false)
 
-    def score_color side
+    def score_color( side, show_score )
       dirs = [[0, 1], [1, 0], [1, 1], [1, -1]]
       #先判断输赢
       iter_color side do |x, y|
         dirs.each do |dx, dy|
-          return side, 0 if match_pattern(x, y, dx, dy, 4, [side, side, side, side, side, OTHER], side)
+          return 1000000000 * side if match_pattern(x, y, dx, dy, 4, [side, side, side, side, side, OTHER], side)
         end
       end
 
 
 
-      l1, l2, l3, l4, s1, s2, s3, s4 = 0, 0, 0, 0, 0, 0, 0, 0
+      l1, l2, l3, l4, s1, s2, s3, s4, s5 = 0, 0, 0, 0, 0, 0, 0, 0, 0
       #活1在每个方向上都算一个
       iter_color side do |x, y|
         dirs.each do |dx, dy|
@@ -293,11 +324,15 @@ class Board
       end
 
 
-      #puts "#{name(side)}:\n活一: #{l1}, 活二: #{l2}, 活三: #{l3}, 活四: #{l4}\n眠二: #{s2}, 眠三 #{s3}, 眠四 #{s4}"
-      l1*2 + l2 * 10 + l3 * 50 + l4 * 100000 + s1 + s2 * 7 + s3 * 30 + s4 * 5000
+
+      if show_score
+        puts "#{name(side)}:"
+        puts "活一: #{l1}, 活二: #{l2}, 活三: #{l3}, 活四: #{l4}"
+        puts "眠二: #{s2}, 眠三 #{s3}, 眠四 #{s4}"
+      end
+      l1*2 + l2 * 10 + l3 * 50 + l4 * 100000 + s1 + s2 * 7 + s3 * 30 + s4 * 5000 + s5 * 1000000
     end
 
-    ret = score_color(@side) - score_color(-@side)
-    return NULL, ret
+    score_color(BLACK, show_score) - score_color(WHITE, show_score)
   end
 end
