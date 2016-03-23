@@ -1,6 +1,7 @@
 BLACK, WHITE, NULL, NO_VALUE, OTHER = -1, 1, 0, -2, -3
 BOARD_SIZE = 15
 FIVE = 5
+INIFITE = 100000000
 
 
 class Board
@@ -49,18 +50,18 @@ class Board
 
   def change_value(x, y, delta)
     values = [
-        [2, 1, 1, 2, 1, 1, 2],
-        [1, 4, 1, 4, 1, 1, 1],
-        [1, 1, 5, 5, 5, 1, 1],
-        [2, 4, 5, 0, 5, 4, 2],
-        [1, 1, 5, 5, 5, 1, 1],
-        [1, 4, 1, 4, 1, 4, 1],
-        [2, 1, 1, 2, 1, 1, 2],
+      [1, 0, 0, 1, 0, 0, 1],
+      [0, 2, 0, 2, 0, 2, 0],
+      [0, 0, 3, 3, 3, 0, 0],
+      [1, 2, 3, 0, 3, 2, 1],
+      [0, 0, 3, 3, 3, 0, 0],
+      [0, 2, 0, 2, 0, 2, 0],
+      [1, 0, 0, 1, 0, 0, 1],
     ]
     (-3..3).each do |dx|
-      next if x-dx < 0 or x+dx > BOARD_SIZE - 1
+      next if x+dx < 0 or x+dx > BOARD_SIZE - 1
       (-3..3).each do |dy|
-        next if y-dy < 0 or y+dy > BOARD_SIZE - 1
+        next if y+dy < 0 or y+dy > BOARD_SIZE - 1
         @value_map[(y+dy) * BOARD_SIZE + (x+dx)] += delta * (values[dx+3][dy+3])
       end
     end
@@ -80,12 +81,12 @@ class Board
   def set(x, y, side = @side)
     return unless valid_pos(x, y)
     case side
-      when BLACK
-        @black_map[x] |= (1 << y)
-      when WHITE
-        @white_map[x] |= (1 << y)
-      else
-        exit
+    when BLACK
+      @black_map[x] |= (1 << y)
+    when WHITE
+      @white_map[x] |= (1 << y)
+    else
+      exit
     end
     @empty_pos[x] &= (0xFFFF ^ (1 << y))
     change_value(x, y, 1)
@@ -113,18 +114,24 @@ class Board
     end
   end
 
-  def show show_score=false
+  def show 
+    puts ""
     iter do |x, y|
       print('%2d ' % (x+1)) if y == 0
       c = get(x, y)
       case c
-        when WHITE
-          print ' o'
-        when BLACK
-          print ' x'
-        else
-         # print "%2d" % get_value(x, y)
-          print ' .'
+      when WHITE
+        print ' o'
+      when BLACK
+        print ' x'
+      else
+        #v = get_value(x, y)
+        #if v > 0
+        #  print "%2d" % get_value(x, y) 
+        #else
+        #  print ' .'
+        #end
+        print ' .'
       end
       print "\n" if y == BOARD_SIZE-1
     end
@@ -133,9 +140,6 @@ class Board
       x = (@last_pos[1] + 'A'.ord).chr
       y = @last_pos[0] + 1
       puts "[#{@id}手:#{name(@side)}, 落子: #{x}#{y}]"
-    end
-    if show_score
-      score true
     end
   end
 
@@ -147,12 +151,12 @@ class Board
 
   def name(side)
     case side
-      when BLACK
-        return 'BLACK'
-      when WHITE
-        return 'WHITE'
-      else
-        return 'N/A'
+    when BLACK
+      return 'BLACK'
+    when WHITE
+      return 'WHITE'
+    else
+      return 'N/A'
     end
   end
 
@@ -253,86 +257,90 @@ class Board
     true
   end
 
-  def score(show_score = false)
+  def score
 
-    def score_color( side, show_score )
-      dirs = [[0, 1], [1, 0], [1, 1], [1, -1]]
-      #先判断输赢
-      iter_color side do |x, y|
-        dirs.each do |dx, dy|
-          return 1000000000 * side if match_pattern(x, y, dx, dy, 4, [side, side, side, side, side, OTHER], side)
+    def score_color( side )
+      sm = StateMachine.new(side)
+      x, y = 0, 0
+      sm.move( NO_VALUE )
+      until x == BOARD_SIZE-1 and y == BOARD_SIZE-1 do 
+        sm.move( get(x, y) )
+        if y == BOARD_SIZE-1 
+          x += 1
+          y = 0
+          sm.move( NO_VALUE )
+        else
+          y += 1
         end
       end
+      sm.move( get(x, y) )
 
 
-
-      l1, l2, l3, l4, s1, s2, s3, s4, s5 = 0, 0, 0, 0, 0, 0, 0, 0, 0
-      #活1在每个方向上都算一个
-      iter_color side do |x, y|
-        dirs.each do |dx, dy|
-          l1 = l1 + 1 if match_pattern(x, y, 1, 0, 2, [NULL, side, NULL], side)
+      x, y = 0, 0
+      sm.move( NO_VALUE )
+      until x == BOARD_SIZE-1 and y == BOARD_SIZE-1 do 
+        sm.move( get(x, y) )
+        if x == BOARD_SIZE-1 
+          y += 1
+          x = 0
+          sm.move( NO_VALUE )
+        else
+          x += 1
         end
       end
+      sm.move( get(x, y) )
 
-      iter_color side do |x, y|
-        dirs.each do |dx, dy|
-          l2 = l2 + 1 if match_pattern(x, y, dx, dy, 2, [NULL, side, side, NULL], side)
-          l2 = l2 + 1 if match_pattern(x, y, dx, dy, 3, [NULL, side, NULL, side, NULL], side)
+
+      x, y = 0, 0
+      sm.move( NO_VALUE )
+      until x == BOARD_SIZE-1 and y == BOARD_SIZE-1 do
+        endx, endy = y, x
+
+        until x == endx and y == endy do
+          sm.move( get(x, y) )
+          x -= 1
+          y += 1
+        end
+        sm.move( get(x, y) )
+
+        x, y = y, x
+        if x == BOARD_SIZE-1 
+          y += 1
+        else
+          x += 1
         end
       end
+      sm.move( get(x, y) )
 
-      iter_color side do |x, y|
-        dirs.each do |dx, dy|
-          s2 = s2 + 1 if match_pattern(x, y, dx, dy, 2, [NULL, side, side, OTHER], side)
-          s2 = s2 + 1 if match_pattern(x, y, dx, dy, 2, [OTHER, side, side, NULL], side)
-          s2 = s2 + 1 if match_pattern(x, y, dx, dy, 3, [NULL, side, NULL, side, OTHER], side)
-          s2 = s2 + 1 if match_pattern(x, y, dx, dy, 3, [OTHER, side, NULL, side, NULL], side)
+      x, y = 0, BOARD_SIZE-1
+      sm.move( NO_VALUE )
+      until x == BOARD_SIZE-1 and y == 0 do
+
+        until x == BOARD_SIZE-1 or y == BOARD_SIZE-1 do
+          sm.move( get(x, y) )
+          x += 1
+          y += 1
+        end
+        sm.move( NO_VALUE )
+
+        if x == BOARD_SIZE-1 
+          x, y = BOARD_SIZE-y, 0
+        else
+          x, y = 0, BOARD_SIZE-x-2
         end
       end
+      sm.move( NO_VALUE )
 
-      iter_color side do |x, y|
-        dirs.each do |dx, dy|
-          l3 = l3 + 1 if match_pattern(x, y, dx, dy, 3, [NULL, side, side, side, NULL], side)
-          l3 = l3 + 1 if match_pattern(x, y, dx, dy, 4, [NULL, side, side, NULL, side, NULL], side)
-        end
-      end
+      #show
+      ret = sm.value
+      #sm.show
+      #gets
 
-      iter_color side do |x, y|
-        dirs.each do |dx, dy|
-          s3 = s3 + 1 if match_pattern(x, y, dx, dy, 3, [NULL, side, side, side, OTHER], side)
-          s3 = s3 + 1 if match_pattern(x, y, dx, dy, 3, [OTHER, side, side, side, NULL], side)
-          s3 = s3 + 1 if match_pattern(x, y, dx, dy, 4, [NULL, side, side, NULL, side, OTHER], side)
-          s3 = s3 + 1 if match_pattern(x, y, dx, dy, 4, [OTHER, side, side, NULL, side, NULL], side)
-        end
-      end
-
-      iter_color side do |x, y|
-        dirs.each do |dx, dy|
-          l4 = l4 + 1 if match_pattern(x, y, dx, dy, 4, [NULL, side, side, side, side, NULL], side)
-        end
-      end
-
-      s4 = 0
-      iter_color side do |x, y|
-        dirs.each do |dx, dy|
-          s4 = s4 + 1 if match_pattern(x, y, dx, dy, 4, [OTHER, side, side, side, side, NULL], side)
-          s4 = s4 + 1 if match_pattern(x, y, dx, dy, 4, [NULL, side, side, side, side, OTHER], side)
-          s4 = s4 + 1 if match_pattern(x, y, dx, dy, 5, [OTHER, side, NULL, side, side, side, OTHER], side)
-          s4 = s4 + 1 if match_pattern(x, y, dx, dy, 5, [OTHER, side, side, NULL, side, side, OTHER], side)
-          s4 = s4 + 1 if match_pattern(x, y, dx, dy, 5, [OTHER, side, side, side, NULL, side, OTHER], side)
-        end
-      end
-
-
-
-      if show_score
-        puts "#{name(side)}:"
-        puts "活一: #{l1}, 活二: #{l2}, 活三: #{l3}, 活四: #{l4}"
-        puts "眠二: #{s2}, 眠三 #{s3}, 眠四 #{s4}"
-      end
-      l1*2 + l2 * 10 + l3 * 50 + l4 * 100000 + s1 + s2 * 7 + s3 * 30 + s4 * 5000 + s5 * 1000000
+      ret
     end
 
-    score_color(BLACK, show_score) - score_color(WHITE, show_score)
+    score_color(BLACK) - score_color(WHITE)
   end
 end
+
+

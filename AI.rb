@@ -1,3 +1,5 @@
+INIFITE = 100000000
+
 class AI
 
   def valuate board, side
@@ -22,12 +24,16 @@ class AI
 
   def _min(board, depth, current)
 
+    if current == board 
+      board.show
+    end
+
     side = board.side * ((current % 2 == 1) and 1 or -1)
 
     best = 10000000
     pos = nil
     board.iter_empty do |x, y|
-      next if board.get_value(x, y) < 3
+      next if board.get_value(x, y) == 0
       board.set x, y, side
 
       if current == depth
@@ -40,6 +46,7 @@ class AI
       if score < best
         best = score
         pos = [x, y]
+        print "\r#{best}: #{[x, y]}               " if current == 1
       end
     end
     return pos, best
@@ -49,10 +56,10 @@ class AI
 
     side = board.side * ((current % 2 == 1) and 1 or -1)
 
-    best = -10000000
+    best = -INIFITE
     pos = nil
     board.iter_empty do |x, y|
-      next if board.get_value(x, y) < 2
+      next if board.get_value(x, y) == 0
       board.set x, y, side
       if current == depth
         score = board.score
@@ -64,6 +71,7 @@ class AI
       if score > best
         best = score
         pos = [x, y]
+        print "\r#{best}: #{[x, y]}               " if current == 1
       end
     end
     return pos, best
