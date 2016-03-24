@@ -1,4 +1,4 @@
-INIFITE = 100000000
+INFINITE = 100000000
 
 class AI
 
@@ -12,68 +12,81 @@ class AI
 
   def max_min board, depth, current
     side = board.side
-    pos, score = nil, 0
+    pos, score = [0, 0], 0
     if side == BLACK
-      pos, score = _max(board, depth, current)
+      pos, score = _max(board, depth, current, 0, 0)
     else
-      pos, score = _min(board, depth, current)
+      pos, score = _min(board, depth, current, 0, 0)
     end
     return pos, score
 
   end
 
-  def _min(board, depth, current)
-
-    if current == board 
-      board.show
+  def _min(board, depth, current, px, py)
+    res, pos = board.judge(px, py)
+    if res == WHITE
+      return [x, y], -INFINITE
     end
 
     side = board.side * ((current % 2 == 1) and 1 or -1)
 
     best = 10000000
-    pos = nil
+    pos = [0, 0]
+    count = 0
+
     board.iter_empty do |x, y|
       next if board.get_value(x, y) == 0
+      count += 1
       board.set x, y, side
 
       if current == depth
         score = board.score
       else
-        _, score = _max(board, depth, current + 1)
+        _, score = _max(board, depth, current + 1, x, y)
       end
       board.reset x, y
 
-      if score < best
+      if score < best or (score == best and board.get_value(x,y) > board.get_value(pos[0], pos[1]))
         best = score
         pos = [x, y]
         print "\r#{best}: #{[x, y]}               " if current == 1
       end
     end
+
+    #puts "level #{current}, searched #{count} points"
     return pos, best
   end
 
-  def _max(board, depth, current)
+  def _max(board, depth, current, px, py)
+    res, pos = board.judge(px, py)
+    if res == BLACK
+      return [x, y], INFINITE
+    end
 
     side = board.side * ((current % 2 == 1) and 1 or -1)
 
-    best = -INIFITE
-    pos = nil
+    best = -INFINITE
+    pos = [0, 0]
+    count = 0
     board.iter_empty do |x, y|
       next if board.get_value(x, y) == 0
+
+      count += 1
       board.set x, y, side
       if current == depth
         score = board.score
       else
-        _, score = _min(board, depth, current + 1)
+        _, score = _min(board, depth, current + 1, x, y)
       end
       board.reset x, y
 
-      if score > best
+      if score > best or (score == best and board.get_value(x,y) > board.get_value(pos[0], pos[1]))
         best = score
         pos = [x, y]
         print "\r#{best}: #{[x, y]}               " if current == 1
       end
     end
+    #puts "level #{current}, searched #{count} points"
     return pos, best
   end
 

@@ -1,7 +1,6 @@
 
 class StateMachine
   attr_accessor :state, :state
-  attr_accessor :shape1, :shape2, :shape3, :shape4
 
   def initialize(side)
     @current_side = side
@@ -62,28 +61,28 @@ class StateMachine
   def trans_o
     case state
     when :o
-    when :_ 
+    when :_
     when :x then collect 1, false
 
     when :x_ then collect 1, false
-    when :xx then collect 1, false
+    when :xx then collect_multi_sleep_one 2
     when :_x then collect 1, false
 
     when :xxx then collect_multi_sleep_one 3
     when :x_x then collect_multi_sleep_one 2
     when :_x_ then collect 1, false
-    when :_xx then collect_multi_sleep_one 2
+    when :_xx then collect 2, false
     when :xx_ then collect_multi_sleep_one 2
 
     when :xxxx then collect_multi_sleep_one 4
     when :xxx_ then collect_multi_sleep_one 3
     when :xx_x then collect_multi_sleep_one 3
     when :x_xx then collect_multi_sleep_one 3
-    when :_xxx then collect_multi_sleep_one 3
-    when :_x_x then collect_multi_sleep_one 2
+    when :_xxx then collect 3, false
+    when :_x_x then collect 2, false
     when :x_x_ then collect_multi_sleep_one 2
-    when :_xx_ then collect_multi_sleep_one 2
-    when :x__x then collect_multi_sleep_one 6
+    when :_xx_ then collect 2, true
+    when :x__x then collect_multi_sleep_one 2
     when :long then collect 6, true
 
     when :xxxxx then collect 5, true
@@ -135,7 +134,6 @@ class StateMachine
     when :_xxx_ then collect 3, true; goto :_
     when :xxx_x then collect 4, false; goto :_
     when :xxxx_ then collect 4, false; goto :_
-    when :xxxx_ then collect 4, false; goto :_
     when :x_xxx then collect 4, false; goto :_
 
     else done
@@ -150,25 +148,26 @@ class StateMachine
     @s1 += count
   end
 
-  def collect length, live
+  def collect (length, live)
     case length
     when 1
-      if live then @l1 +=1 else @s1 +=1 end
+      live ? @l1 +=1 : @s1 +=1
     when 2
-      if live then @l2 +=1 else @s2 +=1 end
+      live ? @l2 +=1 : @s2 +=1
     when 3
-      if live then @l3 +=1 else @s3 +=1 end
+      live ? @l3 +=1 : @s3 +=1
     when 4
-      if live then @l4 +=1 else @s4 +=1 end
+      live ? @l4 +=1 : @s4 +=1
     when 5
-      if live then @l5 +=1 else @s5 +=1 end
+      live ? @l5 +=1 : @s5 +=1
     when 6
-      if live then @l6 +=1 else @s6 +=1 end
+      live ? @l6 +=1 : @s6 +=1
+      else
     end
   end
 
   def done
-    puts "statemachine error!"
+    puts 'state_machine error!'
     exit
   end
 
@@ -199,18 +198,18 @@ class StateMachine
   end
 
   def value
-    return @s1 * 1 +
-      @l1 * 5 + 
-      @s2 * 10 + 
-      @l2 * 20 + 
-      @s3 * 100 + 
-      @l3 * 1000 + 
-      @s4 * 10000 + 
-      @l4 * INIFITE + 
-      @s5 * INIFITE + 
-      @l5 * INIFITE + 
-      @s6 * INIFITE + 
-      @l6 * INIFITE  
+    @s1 * 1 +
+        @l1 * 5 +
+        @s2 * 10 +
+        @l2 * 20 +
+        @s3 * 100 +
+        @l3 * 1000 +
+        @s4 * 10000 +
+        @l4 * INFINITE +
+        @s5 * INFINITE +
+        @l5 * INFINITE +
+        @s6 * INFINITE +
+        @l6 * INFINITE
   end
 
   def show

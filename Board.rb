@@ -331,10 +331,10 @@ class Board
       end
       sm.move( NO_VALUE )
 
-      #show
+#      show
       ret = sm.value
-      #sm.show
-      #gets
+#      sm.show
+#      gets
 
       ret
     end
