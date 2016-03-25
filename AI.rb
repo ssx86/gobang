@@ -25,7 +25,7 @@ class AI
   def _min(board, depth, current, px, py)
     res, pos = board.judge(px, py)
     if res == WHITE
-      return [x, y], -INFINITE
+      return [px, py], -INFINITE
     end
 
     side = board.side * ((current % 2 == 1) and 1 or -1)
@@ -34,13 +34,17 @@ class AI
     pos = [0, 0]
     count = 0
 
-    board.iter_empty do |x, y|
+    situation = board.compute
+    range = situation[:vip].size > 0 ? 
+      situation[:vip] : board.empty_points 
+
+    range.each do |x, y|
       next if board.get_value(x, y) == 0
       count += 1
       board.set x, y, side
 
       if current == depth
-        score = board.score
+        score = board.compute[:score]
       else
         _, score = _max(board, depth, current + 1, x, y)
       end
@@ -60,7 +64,7 @@ class AI
   def _max(board, depth, current, px, py)
     res, pos = board.judge(px, py)
     if res == BLACK
-      return [x, y], INFINITE
+      return [px, py], INFINITE
     end
 
     side = board.side * ((current % 2 == 1) and 1 or -1)
@@ -68,13 +72,18 @@ class AI
     best = -INFINITE
     pos = [0, 0]
     count = 0
-    board.iter_empty do |x, y|
+
+    situation = board.compute
+    range = situation[:vip].size > 0 ? 
+      situation[:vip] : board.empty_points 
+
+    range.each do |x, y|
       next if board.get_value(x, y) == 0
 
       count += 1
       board.set x, y, side
       if current == depth
-        score = board.score
+        score = board.compute[:score]
       else
         _, score = _min(board, depth, current + 1, x, y)
       end

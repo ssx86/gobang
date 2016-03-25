@@ -1,20 +1,22 @@
 
 class StateMachine
-  attr_accessor :state, :state
+  attr_accessor :state, :state, :vip
 
   def initialize(side)
     @current_side = side
     @state = :o
-
+    @vip = []
     @s1, @l1 = 0, 0
     @s2, @l2 = 0, 0
     @s3, @l3 = 0, 0
     @s4, @l4 = 0, 0
     @s5, @l5 = 0, 0
     @s6, @l6 = 0, 0
-
   end
 
+  def set_direction(dir_x, dir_y)
+    @dir_x, @dir_y = dir_x, dir_y
+  end
 
   def trans_x
     case state
@@ -47,12 +49,11 @@ class StateMachine
     when :_xx_x then goto :xx_xx
     when :_xxx_ then goto :xxx_x
     when :_x_xx then goto :x_xxx
-    when :xx_xx then collect 2, false; goto :xxx
+    when :xx_xx then goto :x_xxx
     when :xxxxx then goto :long
-    when :x_xxx then collect 1, false; goto :xxxx
+    when :x_xxx then collect 1, false; goto :_xxxx
 
     when :x_xxxx then goto :long
-
 
     else done
     end
@@ -126,15 +127,31 @@ class StateMachine
     when :x_xx then collect 3, false; goto :_
     when :long then collect 6, true; goto :_
 
+    when :xxxxx then collect 5, true; goto :_
+
+    when :_xxxx then collect 4, true; goto :_
+
+      # important point
     when :_xx_x then collect 3, true; goto :_
     when :_x_xx then collect 3, true; goto :_
-    when :xxxxx then collect 5, true; goto :_
-    when :xx_xx then collect 4, false; goto :_
-    when :_xxxx then collect 4, true; goto :_
     when :_xxx_ then collect 3, true; goto :_
-    when :xxx_x then collect 4, false; goto :_
-    when :xxxx_ then collect 4, false; goto :_
-    when :x_xxx then collect 4, false; goto :_
+
+    when :xx_xx 
+      collect 4, false
+      add_vip_point [-3]
+      goto :_
+    when :xxx_x 
+      collect 4, false 
+      add_vip_point [-2]
+      goto :_
+    when :xxxx_ 
+      collect 4, false 
+      add_vip_point [-1]
+      goto :_
+    when :x_xxx 
+      collect 4, false 
+      add_vip_point [-4]
+      goto :_
 
     else done
     end
@@ -142,6 +159,12 @@ class StateMachine
 
   def goto s
     @state = s
+  end
+
+  def add_vip_point points
+    points.each do |delta|
+      @vip << [ @cur_x - delta * @dir_x , @cur_y - delta * @dir_y ]
+    end
   end
 
   def collect_multi_sleep_one count
@@ -171,7 +194,7 @@ class StateMachine
     exit
   end
 
-  def move(side)
+  def move(side, x, y)
 =begin
     c = case side
         when @current_side
@@ -185,6 +208,8 @@ class StateMachine
         end
     puts "side = #{c}, when :#{@state}"
 =end
+    @cur_x, @cur_y = x, y
+
     case side
       when @current_side
         trans_x

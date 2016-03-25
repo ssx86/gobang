@@ -228,80 +228,67 @@ class Board
     end
   end
 
-  def iter_color side
-    (0...BOARD_SIZE).each do |x|
-      (0...BOARD_SIZE).each do |y|
-        next unless get(x, y) == side
-        yield x, y
-      end
+  def empty_points
+    points = []
+    iter_empty do |x, y|
+      points << [x, y]
     end
+    points
   end
 
-  def match_pattern(start_x, start_y, dx, dy, offset, pattern, side)
-
-    def eq(x, value)
-      if value == OTHER
-        x == -side or x == NO_VALUE
-      else
-        x == value
-      end
-    end
-
-    i = 0
-    x, y = start_x - offset*dx, start_y - offset*dy
-    while i < pattern.size
-      return false unless eq(get(x, y), pattern[i])
-      x, y = x + dx, y + dy
-      i = i + 1
-    end
-    true
-  end
-
-  def score
-
+  def compute
     def score_color( side )
       sm = StateMachine.new(side)
+
+      # dx, dy = 1, 0
+      sm.set_direction 1, 0
       x, y = 0, 0
-      sm.move( NO_VALUE )
+
+      sm.move( NO_VALUE , x, y)
       until x == BOARD_SIZE-1 and y == BOARD_SIZE-1 do 
-        sm.move( get(x, y) )
+        sm.move( get(x, y), x, y)
         if y == BOARD_SIZE-1 
           x += 1
           y = 0
-          sm.move( NO_VALUE )
+          sm.move( NO_VALUE, x, y )
         else
           y += 1
         end
       end
-      sm.move( get(x, y) )
+      sm.move( get(x, y), x, y )
 
 
+      #dx, dy = 0, 1
+      sm.set_direction 0, 1
       x, y = 0, 0
-      sm.move( NO_VALUE )
+
+      sm.move( NO_VALUE, x, y)
       until x == BOARD_SIZE-1 and y == BOARD_SIZE-1 do 
-        sm.move( get(x, y) )
+        sm.move( get(x, y), x, y )
         if x == BOARD_SIZE-1 
           y += 1
           x = 0
-          sm.move( NO_VALUE )
+          sm.move( NO_VALUE, x, y )
         else
           x += 1
         end
       end
-      sm.move( get(x, y) )
+      sm.move( get(x, y), x, y )
 
 
+      # dx, dy = -1, 1
+      sm.set_direction 1, 0
       x, y = 0, 0
-      sm.move( NO_VALUE )
+      sm.move( NO_VALUE, x, y)
       until x == BOARD_SIZE-1 and y == BOARD_SIZE-1 do
         endx, endy = y, x
 
         until x == endx and y == endy do
-          sm.move( get(x, y) )
+          sm.move( get(x, y), x, y )
           x -= 1
           y += 1
         end
-        sm.move( get(x, y) )
+        sm.move( get(x, y), x, y )
 
         x, y = y, x
         if x == BOARD_SIZE-1 
@@ -310,18 +297,20 @@ class Board
           x += 1
         end
       end
-      sm.move( get(x, y) )
+      sm.move( get(x, y), x, y )
 
+      # dx, dy = 1, 1
+      sm.set_direction 1, 0
       x, y = 0, BOARD_SIZE-1
-      sm.move( NO_VALUE )
+      sm.move( NO_VALUE, x, y)
       until x == BOARD_SIZE-1 and y == 0 do
 
         until x == BOARD_SIZE-1 or y == BOARD_SIZE-1 do
-          sm.move( get(x, y) )
+          sm.move( get(x, y), x, y )
           x += 1
           y += 1
         end
-        sm.move( NO_VALUE )
+        sm.move( NO_VALUE, x, y )
 
         if x == BOARD_SIZE-1 
           x, y = BOARD_SIZE-y, 0
@@ -329,17 +318,19 @@ class Board
           x, y = 0, BOARD_SIZE-x-2
         end
       end
-      sm.move( NO_VALUE )
+      sm.move( NO_VALUE, x, y )
 
 #      show
-      ret = sm.value
+      ret, vip = sm.value, sm.vip
 #      sm.show
 #      gets
 
-      ret
+      return ret, vip
     end
 
-    score_color(BLACK) - score_color(WHITE)
+    ret_black, vip1 = score_color(BLACK)
+    ret_white, vip2 = score_color(WHITE)
+    return { score: ret_black - ret_white, vip: vip1+vip2 }
   end
 end
 
