@@ -1,3 +1,6 @@
+#此状态机不考虑任何禁手问题,有其他地方判断
+
+# judge 要负责判断禁手和五连，直接决定棋局分数。
 
 class StateMachine
   attr_accessor :state, :state, :vip
@@ -10,8 +13,7 @@ class StateMachine
     @s2, @l2 = 0, 0
     @s3, @l3 = 0, 0
     @s4, @l4 = 0, 0
-    @s5, @l5 = 0, 0
-    @s6, @l6 = 0, 0
+    @c5 = 0
   end
 
   def set_direction(dir_x, dir_y)
@@ -35,25 +37,18 @@ class StateMachine
     when :xx_ then goto :xx_x
 
     when :_xx_ then goto :_xx_x
-    when :xx_x then goto :xx_xx
+    when :xx_x then collect 4, false; goto :xx
     when :_xxx then goto :_xxxx
     when :_x_x then goto :_x_xx
-    when :xxxx then goto :xxxxx
-    when :x_xx then goto :x_xxx
-    when :long then goto :long
-    when :xxx_ then goto :xxx_x
+    when :xxxx then collect 5
+    when :x_xx then collect 4, false; goto :_xxx
+    when :xxx_ then collect 4, false; goto :_x
 
-    when :_xxxx then goto :xxxxx
-    when :xxx_x then goto :long
-    when :xxxx_ then goto :long
-    when :_xx_x then goto :xx_xx
-    when :_xxx_ then goto :xxx_x
-    when :_x_xx then goto :x_xxx
-    when :xx_xx then goto :x_xxx
-    when :xxxxx then goto :long
-    when :x_xxx then collect 1, false; goto :_xxxx
+    when :_xxxx then collect 5
+    when :_x_xx then collect 4, false; goto :_xxx
+    when :_xx_x then collect 4, false; goto :_xx
+    when :_xxx_ then collect 4, false; goto :_x
 
-    when :x_xxxx then goto :long
 
     else done
     end
@@ -86,11 +81,6 @@ class StateMachine
     when :x__x then collect_multi_sleep_one 2
     when :long then collect 6, true
 
-    when :xxxxx then collect 5, true
-    when :xxxx_ then collect 4, false
-    when :xxx_x then collect 4, false
-    when :xx_xx then collect 4, false
-    when :x_xxx then collect 4, false
     when :_xxxx then collect 4, false
     when :_xxx_ then collect 3, false
     when :_xx_x then collect 3, false
@@ -121,13 +111,11 @@ class StateMachine
     when :_x_x then collect 2, true; goto :_
     when :xx_x then collect 3, false; goto :_
     when :_xx_ then collect 2, true; goto :_
-    when :xxxx then goto :xxxx_
-    when :xxx_ then goto :xxx_
+    when :xxxx then collect 4, false; goto :_
+    when :xxx_ then collect 3, false; goto :_
     when :_xxx then goto :_xxx_
     when :x_xx then collect 3, false; goto :_
-    when :long then collect 6, true; goto :_
 
-    when :xxxxx then collect 5, true; goto :_
 
     when :_xxxx then collect 4, true; goto :_
 
@@ -135,23 +123,6 @@ class StateMachine
     when :_xx_x then collect 3, true; goto :_
     when :_x_xx then collect 3, true; goto :_
     when :_xxx_ then collect 3, true; goto :_
-
-    when :xx_xx 
-      collect 4, false
-      add_vip_point [-3]
-      goto :_
-    when :xxx_x 
-      collect 4, false 
-      add_vip_point [-2]
-      goto :_
-    when :xxxx_ 
-      collect 4, false 
-      add_vip_point [-1]
-      goto :_
-    when :x_xxx 
-      collect 4, false 
-      add_vip_point [-4]
-      goto :_
 
     else done
     end
@@ -171,7 +142,7 @@ class StateMachine
     @s1 += count
   end
 
-  def collect (length, live)
+  def collect (length, live = false)
     case length
     when 1
       live ? @l1 +=1 : @s1 +=1
@@ -182,9 +153,7 @@ class StateMachine
     when 4
       live ? @l4 +=1 : @s4 +=1
     when 5
-      live ? @l5 +=1 : @s5 +=1
-    when 6
-      live ? @l6 +=1 : @s6 +=1
+      @c5 +=1
       else
     end
   end
@@ -224,17 +193,14 @@ class StateMachine
 
   def value
     @s1 * 1 +
-        @l1 * 5 +
-        @s2 * 10 +
+        @l1 * 1 +
+        @s2 * 19 +
         @l2 * 20 +
-        @s3 * 100 +
-        @l3 * 1000 +
-        @s4 * 10000 +
+        @s3 * 150 +
+        @l3 * 200 +
+        @s4 * 1000 +
         @l4 * INFINITE +
-        @s5 * INFINITE +
-        @l5 * INFINITE +
-        @s6 * INFINITE +
-        @l6 * INFINITE
+        @c5 * INFINITE
   end
 
   def show

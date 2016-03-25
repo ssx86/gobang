@@ -72,9 +72,11 @@ end
 Gobang.new.play
 =begin
 sm = StateMachine.new(1)
+sm.set_direction(0, 0)
 while a = rand(3) - 1 do 
-  sm.move(a)
+  sm.move(a, 0, 0)
 end
+
 sm = StateMachine.new(1)
 [0, 1,0,-1,0,1,0,-1].each do |a|  
   sm.move(a)

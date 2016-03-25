@@ -7,7 +7,7 @@ class AI
   end
 
   def guess board
-    pos, score = max_min board, 3, 1
+    pos, score = max_min board, 2, 1
   end
 
   def max_min board, depth, current
