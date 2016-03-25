@@ -3,9 +3,52 @@ INFINITE = 100000000
 class AI
 
   def guess board
-    pos, score = max_min board, 1
+    pos, score = alpha_beta board, board.side, 1, 0, 0, - INFINITE, INFINITE
   end
 
+  def alpha_beta board, current_side, depth, px, py, alpha, beta
+    result, score, reason = board.judge(px, py)
+    if result == current_side
+      return [px, py], current_side * INFINITE
+    end
+
+    situation = board.compute
+    if 0 == depth
+      return [px, py], situation[:score]
+    end
+
+
+    pos = nil
+
+
+    #range = situation[:vip].size > 0 ?
+     #   situation[:vip] : board.valuable_points
+
+    range = board.valuable_points
+    range.each do |x, y|
+
+      board.set x, y, current_side
+
+      pos_next, score_next = alpha_beta board, -current_side, depth - 1, x, y, -beta, -alpha
+      puts [pos_next, score_next]
+      score = -score_next
+
+      board.reset x, y
+
+      if score >= beta
+        return pos_next, beta
+      end
+
+      if score > alpha # or (score == best and board.get_value(x,y) > board.get_value(pos[0], pos[1]))
+        pos, alpha = pos_next, score
+      end
+    end
+
+    return pos, alpha
+  end
+
+
+=begin
   def max_min board, depth
     side = board.side
     pos, score = [0, 0], 0
@@ -88,6 +131,6 @@ class AI
     end
     return pos, best
   end
-
+=end
 
 end
