@@ -2,33 +2,28 @@ INFINITE = 100000000
 
 class AI
 
-  def valuate board, side
-
-  end
-
   def guess board
-    pos, score = max_min board, 2, 1
+    pos, score = max_min board, 1
   end
 
-  def max_min board, depth, current
+  def max_min board, depth
     side = board.side
     pos, score = [0, 0], 0
     if side == BLACK
-      pos, score = _max(board, depth, current, 0, 0)
+      pos, score = _max(board, side, depth, 0, 0)
     else
-      pos, score = _min(board, depth, current, 0, 0)
+      pos, score = _min(board, side, depth, 0, 0)
     end
     return pos, score
-
   end
 
-  def _min(board, depth, current, px, py)
+  def _min(board, current_side, depth, px, py)
     result, score, reason = board.judge(px, py)
-    if result == WHITE
-      return [px, py], -INFINITE
+    if result == current_side
+      return [px, py], current_side * INFINITE
     end
 
-    side = board.side * ((current % 2 == 1) and 1 or -1)
+    side = current_side
 
     best = 10000000
     pos = [0, 0]
@@ -43,31 +38,29 @@ class AI
       count += 1
       board.set x, y, side
 
-      if current == depth
+      if 0 == depth
         score = board.compute[:score]
       else
-        _, score = _max(board, depth, current + 1, x, y)
+        _, score = _max(board, -side, depth - 1, x, y)
       end
       board.reset x, y
 
-      if score < best or (score == best and board.get_value(x,y) > board.get_value(pos[0], pos[1]))
+      if score < best # or (score == best and board.get_value(x,y) > board.get_value(pos[0], pos[1]))
         best = score
         pos = [x, y]
-        print "\r#{best}: #{[x, y]}               " if current == 1
       end
     end
 
-    #puts "level #{current}, searched #{count} points"
     return pos, best
   end
 
-  def _max(board, depth, current, px, py)
+  def _max(board, current_side, depth, px, py)
     result, score, reason = board.judge(px, py)
-    if result == BLACK
-      return [px, py], INFINITE
+    if result == current_side
+      return [px, py], current_side * INFINITE
     end
 
-    side = board.side * ((current % 2 == 1) and 1 or -1)
+    side = current_side
 
     best = -INFINITE
     pos = [0, 0]
@@ -81,20 +74,18 @@ class AI
 
       count += 1
       board.set x, y, side
-      if current == depth
+      if 0 == depth
         score = board.compute[:score]
       else
-        _, score = _min(board, depth, current + 1, x, y)
+        _, score = _min(board, -side, depth - 1, x, y)
       end
       board.reset x, y
 
-      if score > best or (score == best and board.get_value(x,y) > board.get_value(pos[0], pos[1]))
+      if score > best # or (score == best and board.get_value(x,y) > board.get_value(pos[0], pos[1]))
         best = score
         pos = [x, y]
-        print "\r#{best}: #{[x, y]}               " if current == 1
       end
     end
-    #puts "level #{current}, searched #{count} points"
     return pos, best
   end
 

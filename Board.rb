@@ -137,10 +137,12 @@ class Board
     end
     puts '    A B C D E F G H I J K L M N O '
     if @last_pos
-      x = (@last_pos[1] + 'A'.ord).chr
-      y = @last_pos[0] + 1
-      puts "[#{@id}手:#{name(@side)}, 落子: #{x}#{y}]"
+      puts "[#{@id}手:#{name(@side)}, 落子: #{point_to_str(@last_pos)}]"
     end
+  end
+
+  def point_to_str *pos
+      "#{(@last_pos[1] + 'A'.ord).chr}#{@last_pos[0] + 1}"
   end
 
   def move(x, y)
