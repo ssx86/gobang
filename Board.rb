@@ -228,10 +228,10 @@ class Board
     end
   end
 
-  def empty_points
+  def valuable_points
     points = []
     iter_empty do |x, y|
-      points << [x, y]
+      points << [x, y] if get_value(x, y) > 0
     end
     points
   end
