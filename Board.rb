@@ -232,9 +232,9 @@ class Board
 
   def valuable_points
     points = []
-    iter_empty do |x, y|
+    iter_empty { |x, y|
       points << [x, y] if get_value(x, y) > 0
-    end
+    }
     points
   end
 

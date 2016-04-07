@@ -37,6 +37,13 @@ class Gobang
     @board.change_side
   end
 
+  def random_go
+    pos = @board.valuable_points.shuffle[0]
+    @board.move(pos[0], pos[1])
+    @board.show
+    puts @board.compute
+    @board.change_side
+  end
 
   def play
     @board.move(7, 7)
@@ -44,8 +51,21 @@ class Gobang
     @board.change_side
     while true do
       ai_go
+
+      puts @board.compute
     end
   end
+
+  def random_play
+    @board.move(7, 7)
+    @board.show
+    @board.change_side
+    while true do
+      random_go
+      gets
+    end
+  end
+
 
   def test1
     @board.move(8, 8)
@@ -53,8 +73,7 @@ class Gobang
     @board.move(8, 9)
     @board.move(7, 8)
 
-    @board.show
-    puts @board.score
+    puts @board.compute
   end
 
   def test2
@@ -64,11 +83,12 @@ class Gobang
     @board.move(1, 1)
 
     @board.show
-    puts @board.score
+    puts @board.compute
 
   end
 end
 
+#Gobang.new.random_play
 Gobang.new.play
 =begin
 sm = StateMachine.new(1)

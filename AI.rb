@@ -3,24 +3,18 @@ INFINITE = 100000000
 class AI
 
   def guess board
-    pos, score = alpha_beta board, board.side, 1, 0, 0, - INFINITE, INFINITE
+    pos, score = alpha_beta board, board.side, 3, 0, 0, - INFINITE, INFINITE
   end
 
   def alpha_beta board, current_side, depth, px, py, alpha, beta
-    result, score, reason = board.judge(px, py)
-    if result == current_side
-      return [px, py], current_side * INFINITE
-    end
 
-    situation = board.compute
+
     if 0 == depth
-      return [px, py], situation[:score]
+      situation = board.compute
+      return nil, situation[:score]
     end
 
-
-    pos = nil
-
-
+    best_move = nil
     #range = situation[:vip].size > 0 ?
      #   situation[:vip] : board.valuable_points
 
@@ -29,22 +23,26 @@ class AI
 
       board.set x, y, current_side
 
-      pos_next, score_next = alpha_beta board, -current_side, depth - 1, x, y, -beta, -alpha
-      puts [pos_next, score_next]
+      _, score_next = alpha_beta board, -current_side, depth - 1, x, y, -beta, -alpha
       score = -score_next
+
+      board.show
+      puts board.compute
+
+      gets
 
       board.reset x, y
 
       if score >= beta
-        return pos_next, beta
+        return [x, y], beta
       end
 
-      if score > alpha # or (score == best and board.get_value(x,y) > board.get_value(pos[0], pos[1]))
-        pos, alpha = pos_next, score
+      if score > alpha # or (score == alpha and board.get_value(x,y) > board.get_value(best_move[0], best_move[1]))
+        best_move, alpha = [x, y], score
       end
     end
 
-    return pos, alpha
+    return best_move, alpha
   end
 
 

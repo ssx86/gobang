@@ -36,6 +36,7 @@ class StateMachine
     when :_xx then goto :_xxx
     when :xx_ then goto :xx_x
 
+    when :_x__ then goto :_x__x
     when :_xx_ then goto :_xx_x
     when :xx_x then collect 4, false; goto :xx
     when :_xxx then goto :_xxxx
@@ -44,6 +45,7 @@ class StateMachine
     when :x_xx then collect 4, false; goto :_xxx
     when :xxx_ then collect 4, false; goto :_x
 
+    when :_x__x then collect 1, false; goto :_xx
     when :_xxxx then collect 5
     when :_x_xx then collect 4, false; goto :_xxx
     when :_xx_x then collect 4, false; goto :_xx
@@ -70,6 +72,7 @@ class StateMachine
     when :_xx then collect 2, false
     when :xx_ then collect_multi_sleep_one 2
 
+    when :_x__ then collect 1, false; goto :_
     when :xxxx then collect_multi_sleep_one 4
     when :xxx_ then collect_multi_sleep_one 3
     when :xx_x then collect_multi_sleep_one 3
@@ -81,6 +84,7 @@ class StateMachine
     when :x__x then collect_multi_sleep_one 2
     when :long then collect 6, true
 
+    when :_x__x then collect 2, false
     when :_xxxx then collect 4, false
     when :_xxx_ then collect 3, false
     when :_xx_x then collect 3, false
@@ -102,12 +106,13 @@ class StateMachine
     when :xx then goto :xx_
     when :x_ then collect 1, true; goto :_
 
-    when :_x_ then collect 1, true; goto :_
+    when :_x_ then goto :_x__
     when :_xx then goto :_xx_
     when :xxx then goto :xxx_
     when :x_x then collect 2, true; goto :_
     when :xx_ then collect 2, true; goto :_
 
+    when :_x__ then collect 1, true; goto :_
     when :_x_x then collect 2, true; goto :_
     when :xx_x then collect 3, false; goto :_
     when :_xx_ then collect 2, true; goto :_
@@ -117,6 +122,7 @@ class StateMachine
     when :x_xx then collect 3, false; goto :_
 
 
+    when :_x__x then collect 2, true; goto :_x
     when :_xxxx then collect 4, true; goto :_
 
       # important point
@@ -192,15 +198,17 @@ class StateMachine
   end
 
   def value
-    @s1 * 1 +
+    if @s4 > 0 and @l3 > 0
+      return 20000
+    end
         @l1 * 1 +
-        @s2 * 19 +
-        @l2 * 20 +
-        @s3 * 150 +
-        @l3 * 200 +
-        @s4 * 1000 +
-        @l4 * INFINITE +
-        @c5 * INFINITE
+        @s2 * 5 +
+        @l2 * 10 +
+        @s3 * 15 +
+        @l3 * 1000 +
+        @s4 * 14000 +
+        @l4 * 20000 +
+        @c5 * 20000
   end
 
   def show
